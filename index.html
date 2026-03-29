@@ -5,233 +5,319 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anywhere Anytime Digital Tree Ceremony</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
-        body { font-family: 'Kanit', sans-serif; background-color: #000; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; width: 100vw; }
-        #app-container { position: relative; width: 100%; max-width: 177.78vh; height: 56.25vw; max-height: 100vh; background-color: #050a15; box-shadow: 0 0 50px rgba(0,0,0,0.8); overflow: hidden; }
-        canvas { display: block; }
-        .glow-text { text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.4); }
-        .seed-btn { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .seed-btn:active { transform: scale(0.9); }
-        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        .final-title-container { animation: fadeInScale 1.5s ease-out forwards; }
-        .teacher-btn { background: radial-gradient(circle, #fbbf24 0%, #b45309 100%); box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
-        #qrcode img { margin: auto; border: 4px solid white; border-radius: 8px; }
-        .audio-control { position: absolute; top: 20px; left: 20px; z-index: 100; background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 50%; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.2); pointer-events: auto; }
+        
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #000;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* กรอบอัตราส่วน 16:9 สำหรับจอโปรเจกเตอร์ */
+        #app-container {
+            position: relative;
+            width: 100%;
+            max-width: 177.78vh; 
+            height: 56.25vw;
+            max-height: 100vh;
+            background-color: #050a15;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .seed-btn {
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .seed-btn:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.9));
+        }
+
+        .seed-btn:active {
+            transform: scale(0.9);
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .final-title-container {
+            animation: fadeInScale 1.5s ease-out forwards;
+        }
+
+        /* ปุ่มควบคุมเสียง */
+        .audio-control {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+        .audio-control:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
     </style>
 </head>
 <body>
-    <div id="app-container">
-        <!-- เพลงและเสียงเอฟเฟกต์ -->
-        <audio id="bg-music" loop><source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg"></audio>
-        <audio id="sfx-activate"><source src="https://assets.mixkit.co/sfx/preview/mixkit-magic-marimba-2820.mp3" type="audio/mpeg"></audio>
-        <audio id="sfx-energy"><source src="https://assets.mixkit.co/sfx/preview/mixkit-digital-quick-interface-click-2324.mp3" type="audio/mpeg"></audio>
 
-        <div id="mute-toggle" class="audio-control text-white">
+    <div id="app-container">
+        <!-- แหล่งที่มาของเสียงประกอบ -->
+        <!-- เพลงพื้นหลังแนวสร้างแรงบันดาลใจ -->
+        <audio id="bg-music" loop>
+            <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg">
+        </audio>
+        <!-- เสียงตอนเริ่มสัมผัสเมล็ดพันธุ์ -->
+        <audio id="sfx-activate">
+            <source src="https://assets.mixkit.co/sfx/preview/mixkit-magic-marimba-2820.mp3" type="audio/mpeg">
+        </audio>
+        <!-- เสียงฉลองตอนจบ (Climax) -->
+        <audio id="sfx-success">
+            <source src="https://assets.mixkit.co/sfx/preview/mixkit-stardust-fanfare-sound-2461.mp3" type="audio/mpeg">
+        </audio>
+
+        <!-- ปุ่มเปิด/ปิดเสียง (แนะนำให้กด Unmute ก่อนเริ่มพิธี) -->
+        <div id="mute-toggle" class="audio-control text-white" title="เปิด/ปิดเสียง">
             <svg id="icon-unmute" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
             <svg id="icon-mute" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 13.88l2.88 2.88L15 20V5l-1.88 1.88"></path><path d="M17.63 17.63a7.5 7.5 0 0 0 0-11.26"></path></svg>
         </div>
 
-        <div id="main-view" class="absolute inset-0 z-10 hidden flex-col items-center justify-between p-8 pointer-events-none">
+        <!-- หน้าแรก (ก่อนเริ่มงาน) -->
+        <div id="ui-overlay" class="absolute inset-0 flex flex-col items-center justify-between p-12 pointer-events-none z-10">
             <div class="text-center">
-                <h2 class="text-xl md:text-2xl font-light text-white opacity-80 mb-2">โรงเรียนนาดูนประชาสรรพ์</h2>
-                <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold glow-text text-white">Anywhere Anytime 2026</h1>
+                <h2 class="text-xl md:text-2xl font-light tracking-[0.2em] mb-2 text-white">โรงเรียนนาดูนประชาสรรพ์</h2>
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold glow-text text-white">Anywhere Anytime 2026</h1>
             </div>
-            <div class="flex flex-col md:flex-row items-center justify-center gap-12 w-full px-10">
-                <div id="qr-section" class="pointer-events-auto flex flex-col items-center gap-4 bg-white/5 p-6 rounded-2xl border border-white/10">
-                    <div id="qrcode" class="bg-white p-2 rounded-lg"></div>
-                    <p class="text-yellow-400 font-bold">สแกนร่วมพิธีเปิด</p>
+
+            <div id="seed-container" class="pointer-events-auto flex flex-col items-center">
+                <div id="seed" class="seed-btn w-24 h-24 md:w-32 md:h-32 bg-gradient-to-b from-yellow-300 to-yellow-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(255,215,0,0.5)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5.07 5.07l13.86 13.86M18.93 5.07L5.07 18.93"/></svg>
                 </div>
-                <div id="seed-container" class="pointer-events-auto cursor-pointer flex flex-col items-center">
-                    <div id="seed" class="seed-btn w-24 h-24 md:w-32 bg-gradient-to-b from-yellow-300 to-yellow-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(255,215,0,0.5)]">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2v20M2 12h20M5.07 5.07l13.86 13.86M18.93 5.07L5.07 18.93"/></svg>
-                    </div>
-                    <p class="mt-6 text-xl text-white animate-pulse">ประธานสัมผัสเพื่อ "เปิดงาน"</p>
-                </div>
+                <p class="mt-8 text-xl md:text-2xl tracking-widest animate-pulse font-light text-white">ประธานสัมผัสเพื่อ "เปิดการอบรม"</p>
             </div>
-            <div class="text-center text-white text-lg font-light"><p>สอนสนุก เรียนสบาย ได้ทุกที่ทุกเวลา ปีการศึกษา ๒๕๖๘</p></div>
+
+            <div class="text-center text-white text-lg md:text-xl font-light tracking-wide">
+                <p>สอนสนุก เรียนสบาย ได้ทุกที่ทุกเวลา ปีการศึกษา ๒๕๖๘</p>
+            </div>
         </div>
 
-        <div id="teacher-view" class="absolute inset-0 z-20 hidden flex-col items-center justify-center p-6 bg-[#050a15]">
-            <h3 class="text-yellow-400 text-lg mb-4">โหมดคุณครูผู้ร่วมเปิดงาน</h3>
-            <button id="send-energy" class="teacher-btn w-40 h-40 rounded-full flex flex-col items-center justify-center text-white active:scale-95 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mb-2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-                <span class="font-bold tracking-widest">ส่งพลัง</span>
-            </button>
-            <p id="send-count-text" class="mt-8 text-yellow-500/50">ส่งไปแล้ว 0 ครั้ง</p>
-        </div>
-
-        <div id="success-overlay" class="absolute inset-0 bg-black/70 backdrop-blur-md hidden z-50 flex items-center justify-center text-center">
-            <div class="final-title-container px-4">
-                <h1 class="text-4xl md:text-8xl font-extrabold text-yellow-400 glow-text mb-8 whitespace-nowrap">เปิดการอบรมอย่างเป็นทางการ</h1>
-                <p class="text-2xl md:text-4xl text-white opacity-90 font-light mb-12">๓๐ มีนาคม ๒๕๖๙</p>
-                <button id="reset-btn" class="px-8 py-3 bg-white/10 border border-white/20 rounded-full hover:bg-white/20 text-gray-300 pointer-events-auto">รีเซ็ตระบบ</button>
+        <!-- หน้าผลสำเร็จ ( Climax ) -->
+        <div id="success-overlay" class="absolute inset-0 bg-black/60 backdrop-blur-md hidden z-50 flex items-center justify-center text-center">
+            <div class="final-title-container px-4 w-full">
+                <h1 class="text-4xl md:text-7xl lg:text-8xl font-extrabold text-yellow-400 glow-text mb-8 whitespace-nowrap">
+                    เปิดการอบรมอย่างเป็นทางการ
+                </h1>
+                <p class="text-2xl md:text-4xl text-white opacity-90 font-light tracking-widest mb-12">
+                    ๓๐ มีนาคม ๒๕๖๙
+                </p>
+                <button onclick="location.reload()" class="px-8 py-3 bg-white/10 border border-white/20 rounded-full hover:bg-white/20 transition-all pointer-events-auto text-gray-300 hover:text-white">
+                    เริ่มต้นใหม่
+                </button>
             </div>
         </div>
+
         <canvas id="treeCanvas"></canvas>
     </div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, onSnapshot, setDoc, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-
-        // --- แก้ไขจุดนี้: ระบบจะเลือกใช้ตัวแปรจาก Preview อัตโนมัติ หรือใช้ค่าที่คุณกรอกเมื่ออยู่บน GitHub ---
-        let firebaseConfig;
-        if (typeof __firebase_config !== 'undefined') {
-            firebaseConfig = JSON.parse(__firebase_config);
-        } else {
-            firebaseConfig = {
-                apiKey: "", // ใส่ API Key ของคุณสำหรับ GitHub
-                authDomain: "",
-                projectId: "",
-                storageBucket: "",
-                messagingSenderId: "",
-                appId: ""
-            };
-        }
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'anywhere-anytime-2026';
-        
-        // Rule 1: Path Structure
-        const stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ceremony_collection', 'current_state');
-        const leavesColRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaves');
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const isTeacher = urlParams.get('role') === 'teacher';
+    <script>
         const container = document.getElementById('app-container');
         const canvas = document.getElementById('treeCanvas');
         const ctx = canvas.getContext('2d');
-        let width, height, currentUser;
-
         const bgMusic = document.getElementById('bg-music');
         const sfxActivate = document.getElementById('sfx-activate');
-        const sfxEnergy = document.getElementById('sfx-energy');
+        const sfxSuccess = document.getElementById('sfx-success');
+        
+        let width, height;
+        let branches = [];
+        let particles = [];
+        let isAnimating = false;
         let isMuted = true;
+        let successSoundPlayed = false;
+        const maxLevel = 8;
 
+        // ระบบควบคุมเสียง
         document.getElementById('mute-toggle').addEventListener('click', () => {
             isMuted = !isMuted;
-            bgMusic.muted = isMuted; sfxActivate.muted = isMuted; sfxEnergy.muted = isMuted;
+            bgMusic.muted = isMuted;
+            sfxActivate.muted = isMuted;
+            sfxSuccess.muted = isMuted;
             document.getElementById('icon-mute').classList.toggle('hidden', !isMuted);
             document.getElementById('icon-unmute').classList.toggle('hidden', isMuted);
-            if(!isMuted) bgMusic.play().catch(()=>{});
+            
+            // เพื่อหลีกเลี่ยงข้อจำกัดการเล่นอัตโนมัติของเบราว์เซอร์
+            if(!isMuted) {
+                // เล่นเสียงเงียบๆ ไว้ก่อนเพื่อให้ Audio Context ทำงาน
+                bgMusic.play().then(() => {
+                    if(!isAnimating) bgMusic.pause();
+                }).catch(() => {});
+            }
         });
 
-        if (isTeacher) {
-            document.getElementById('teacher-view').classList.remove('hidden');
-            document.getElementById('teacher-view').classList.add('flex');
-        } else {
-            document.getElementById('main-view').classList.remove('hidden');
-            document.getElementById('main-view').classList.add('flex');
-            new QRCode(document.getElementById("qrcode"), { text: window.location.href.split('?')[0] + "?role=teacher", width: 128, height: 128 });
+        function resize() {
+            const rect = container.getBoundingClientRect();
+            width = canvas.width = rect.width;
+            height = canvas.height = rect.height;
         }
-
-        function resize() { width = canvas.width = container.offsetWidth; height = canvas.height = container.offsetHeight; }
-        window.addEventListener('resize', resize); resize();
-
-        let branches = [], particles = [], isAnimating = false, sendCount = 0;
-        const maxLevel = 8;
+        window.addEventListener('resize', resize);
+        resize();
 
         class Branch {
             constructor(startX, startY, endX, endY, level, angle) {
-                Object.assign(this, {startX, startY, endX, endY, level, angle, progress: 0, speed: 0.015 + Math.random()*0.015, finished: false});
+                this.startX = startX;
+                this.startY = startY;
+                this.endX = endX;
+                this.endY = endY;
+                this.level = level;
+                this.angle = angle;
+                this.progress = 0;
+                this.speed = 0.015 + (Math.random() * 0.015);
+                this.finished = false;
             }
+
             draw() {
-                const curX = this.startX + (this.endX - this.startX) * this.progress;
-                const curY = this.startY + (this.endY - this.startY) * this.progress;
-                ctx.beginPath(); ctx.moveTo(this.startX, this.startY); ctx.lineTo(curX, curY);
-                ctx.strokeStyle = `rgba(255, 215, 0, ${1 - this.level/(maxLevel+1)})`;
-                ctx.lineWidth = (maxLevel - this.level) * 2 + 1; ctx.stroke();
-                if (this.progress < 1) this.progress += this.speed;
-                else if (!this.finished) { this.finished = true; this.split(); }
+                const currentX = this.startX + (this.endX - this.startX) * this.progress;
+                const currentY = this.startY + (this.endY - this.startY) * this.progress;
+
+                ctx.beginPath();
+                ctx.moveTo(this.startX, this.startY);
+                ctx.lineTo(currentX, currentY);
+                
+                const opacity = 1 - (this.level / (maxLevel + 1));
+                ctx.strokeStyle = `rgba(255, 215, 0, ${opacity})`;
+                ctx.lineWidth = (maxLevel - this.level) * 2.5 + 1;
+                ctx.lineCap = 'round';
+                
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'rgba(255, 215, 0, 0.4)';
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                if (this.progress < 1) {
+                    this.progress += this.speed;
+                } else if (!this.finished) {
+                    this.finished = true;
+                    this.split();
+                }
             }
+
             split() {
-                if (this.level >= maxLevel) return;
-                for (let i = 0; i < 2 + Math.floor(Math.random()*2); i++) {
-                    const len = (Math.random()*0.6+0.3)*(height/5)*(1-this.level/maxLevel);
-                    const ang = this.angle + (Math.random()*60-30);
-                    const rad = (ang-90)*Math.PI/180;
-                    branches.push(new Branch(this.endX, this.endY, this.endX + Math.cos(rad)*len, this.endY + Math.sin(rad)*len, this.level+1, ang));
+                if (this.level >= maxLevel) {
+                    for(let i=0; i<5; i++) {
+                        particles.push(new Leaf(this.endX, this.endY));
+                    }
+                    return;
+                }
+
+                const subBranches = 2 + Math.floor(Math.random() * 2);
+                for (let i = 0; i < subBranches; i++) {
+                    const nextLen = (Math.random() * 0.65 + 0.3) * (height / 5) * (1 - this.level/maxLevel);
+                    const nextAngle = this.angle + (Math.random() * 60 - 30);
+                    const rad = (nextAngle - 90) * Math.PI / 180;
+                    const nextX = this.endX + Math.cos(rad) * nextLen;
+                    const nextY = this.endY + Math.sin(rad) * nextLen;
+
+                    branches.push(new Branch(this.endX, this.endY, nextX, nextY, this.level + 1, nextAngle));
                 }
             }
         }
 
         class Leaf {
-            constructor(x, y, isEnergy = false) {
-                Object.assign(this, {x, y: isEnergy?height+20:y, vx: isEnergy?(Math.random()*width-width/2)*0.01:(Math.random()-0.5)*2.5, vy: isEnergy?-Math.random()*5-2:(Math.random()-0.5)*2.5, size: isEnergy?8:4, alpha: 1, color: isEnergy?'#fbbf24':'#FFD700', isEnergy});
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = (Math.random() - 0.5) * 3;
+                this.size = Math.random() * 6 + 2;
+                this.alpha = 1;
+                this.color = Math.random() > 0.4 ? '#FFD700' : '#4DEEE1'; 
             }
-            update() { this.x += this.vx; this.y += this.vy; this.alpha -= this.isEnergy?0.015:0.005; }
-            draw() { ctx.save(); ctx.globalAlpha = this.alpha; ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= 0.004;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
         }
 
         function animate() {
-            ctx.fillStyle = 'rgba(5, 10, 21, 0.2)'; ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(5, 10, 21, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+
             branches.forEach(b => b.draw());
-            particles = particles.filter(p => p.alpha > 0); particles.forEach(p => { p.update(); p.draw(); });
-            if (isAnimating && branches.length > 0 && branches.every(b => b.finished) && particles.length === 0) {
-                document.getElementById('success-overlay').classList.replace('hidden', 'flex');
+            particles = particles.filter(p => p.alpha > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            const activeBranches = branches.filter(b => !b.finished || b.progress < 1);
+            if (isAnimating && branches.length > 0 && activeBranches.length === 0 && particles.length === 0) {
+                const overlay = document.getElementById('success-overlay');
+                if(overlay.classList.contains('hidden')) {
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                    
+                    // เล่นเสียงความสำเร็จเพียงครั้งเดียว
+                    if(!successSoundPlayed && !isMuted) {
+                        sfxSuccess.play();
+                        successSoundPlayed = true;
+                    }
+                }
             }
+
             requestAnimationFrame(animate);
         }
 
-        // Rule 3: Auth Before Queries
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (err) {
-                console.error("Auth failed", err);
+        document.getElementById('seed').addEventListener('click', () => {
+            if (isAnimating) return;
+            isAnimating = true;
+            document.getElementById('seed-container').style.display = 'none';
+            
+            // เริ่มต้นวาดต้นไม้
+            branches.push(new Branch(width / 2, height, width / 2, height - (height * 0.25), 0, 0));
+            
+            // เล่นเสียงประกอบ
+            if(!isMuted) {
+                bgMusic.play().catch(() => {});
+                sfxActivate.play().catch(() => {});
             }
-        };
-
-        initAuth();
-
-        onAuthStateChanged(auth, user => {
-            if (!user) return; 
-            currentUser = user;
-            setupListeners();
         });
 
-        const setupListeners = () => {
-            onSnapshot(stateDocRef, snap => {
-                const d = snap.data();
-                if (d?.started && !isAnimating) {
-                    isAnimating = true;
-                    if (!isTeacher) {
-                        document.getElementById('qr-section').style.display = 'none';
-                        document.getElementById('seed-container').style.display = 'none';
-                        branches.push(new Branch(width/2, height, width/2, height*0.75, 0, 0));
-                        if(!isMuted) { bgMusic.play(); sfxActivate.play(); }
-                    }
-                } else if (d && !d.started && isAnimating) location.reload();
-            }, (err) => console.error("State snapshot error", err));
-
-            if (!isTeacher) {
-                onSnapshot(leavesColRef, snap => {
-                    snap.docChanges().forEach(c => { 
-                        if(c.type === "added") { 
-                            for(let i=0;i<5;i++) particles.push(new Leaf(width/2, height, true)); 
-                            if(!isMuted) { sfxEnergy.currentTime=0; sfxEnergy.play(); } 
-                        } 
-                    });
-                }, (err) => console.error("Leaves snapshot error", err));
-            }
-        };
-
-        document.getElementById('send-energy')?.addEventListener('click', () => {
-            if(!currentUser) return; sendCount++; document.getElementById('send-count-text').innerText = `ส่งไปแล้ว ${sendCount} ครั้ง`;
-            addDoc(leavesColRef, { uid: currentUser.uid, timestamp: serverTimestamp() });
-        });
-        document.getElementById('seed')?.addEventListener('click', () => setDoc(stateDocRef, { started: true, timestamp: serverTimestamp() }));
-        document.getElementById('reset-btn')?.addEventListener('click', () => setDoc(stateDocRef, { started: false }));
-
+        // เริ่มต้นแอนิเมชันลูป
         animate();
     </script>
 </body>
